@@ -36,7 +36,7 @@ jobs:
         run: ./gradlew clean assembleRelease
 
       - name: Upload AAR artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: taglib-release-aar
           path: taglib/build/outputs/aar/taglib-release.aar
