@@ -3,7 +3,7 @@ name: Build TagLib AAR and Release
 on:
   push:
     branches:
-      - main  # Run on push to main
+      - main  # Trigger on push to main branch
   workflow_dispatch:   # Or run manually
 
 jobs:
@@ -56,7 +56,8 @@ jobs:
       - name: Create GitHub Release and upload AAR
         uses: ncipollo/release-action@v1
         with:
-          tag: manual-${{ github.run_number }}   # No quotes, avoids YAML parsing errors
+          tag: manual-${{ github.run_number }}       # Unique tag per run
           name: TagLib AAR Build #${{ github.run_number }}
           artifacts: ${{ env.AAR_FILE }}
-          overwrite: true
+          replacesArtifacts: true
+          generateReleaseNotes: false
