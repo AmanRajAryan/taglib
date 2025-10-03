@@ -2,8 +2,8 @@ name: Build TagLib AAR and Release
 
 on:
   push:
-    tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
+    branches:
+      - main  # Or any branch you want to trigger builds
   workflow_dispatch:
 
 jobs:
@@ -35,6 +35,31 @@ jobs:
       # 5. Create local.properties pointing to SDK
       - name: Create local.properties
         run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
+
+      # 6. Install exact CMake version
+      - name: Install CMake 4.0.2
+        run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "cmake;4.0.2"
+
+      # 7. Build release AAR
+      - name: Build release AAR
+        run: ./gradlew clean assembleRelease
+
+      # 8. Find the built AAR dynamically
+      - name: Find built AAR
+        id: find_aar
+        run: |
+          AAR_FILE=$(find . -type f -path "*/build/outputs/aar/*.aar" | head -n 1)
+          echo "AAR_FILE=$AAR_FILE" >> $GITHUB_ENV
+          echo "Found AAR: $AAR_FILE"
+
+      # 9. Create GitHub Release and upload AAR
+      - name: Create GitHub Release and upload AAR
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "manual-${{ github.run_number }}"  # Generate a unique release tag per run
+          name: "TagLib AAR Build #${{ github.run_number }}"
+          artifacts: "${{ env.AAR_FILE }}"
+          overwrite: true        run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
 
       # 6. Install exact CMake version
       - name: Install CMake 4.0.2
