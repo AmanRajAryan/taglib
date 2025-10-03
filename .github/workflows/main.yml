@@ -1,13 +1,13 @@
-name: Build TagLib AAR for Android
+name: Build TagLib AAR and Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
   workflow_dispatch:
 
 jobs:
-  build-aar:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +35,31 @@ jobs:
       # 5. Create local.properties pointing to SDK
       - name: Create local.properties
         run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
+
+      # 6. Install exact CMake version
+      - name: Install CMake 4.0.2
+        run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "cmake;4.0.2"
+
+      # 7. Build release AAR
+      - name: Build release AAR
+        run: ./gradlew clean assembleRelease
+
+      # 8. Find the AAR file
+      - name: Find built AAR
+        id: find_aar
+        run: |
+          AAR_FILE=$(find . -type f -path "*/build/outputs/aar/*.aar" | head -n 1)
+          echo "AAR_FILE=$AAR_FILE" >> $GITHUB_ENV
+          echo "Found AAR: $AAR_FILE"
+
+      # 9. Upload to GitHub Releases
+      - name: Create GitHub Release and upload AAR
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          artifacts: ${{ env.AAR_FILE }}
+          name: TagLib AAR ${{ github.ref_name }}
+          overwrite: true        run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
 
       # 6. Install exact CMake version required by the project
       - name: Install CMake 4.0.2
