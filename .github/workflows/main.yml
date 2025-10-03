@@ -11,27 +11,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Set up Java 17 (required by Android SDK tools)
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
 
+      # 3. Set up Android SDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
 
+      # 4. Make Gradle wrapper executable
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
+      # 5. Create local.properties pointing to SDK
+      - name: Create local.properties
+        run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
+
+      # 6. Install exact CMake version required by the project
+      - name: Install CMake 4.0.2
+        run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "cmake;4.0.2"
+
+      # 7. Verify Gradle wrapper
       - name: Verify Gradle Wrapper
         run: ./gradlew --version
 
+      # 8. Build release AAR (Java 8 bytecode is set in build.gradle)
       - name: Build release AAR
         run: ./gradlew clean assembleRelease
 
+      # 9. Upload the resulting AAR
       - name: Upload AAR artifact
         uses: actions/upload-artifact@v4
         with:
